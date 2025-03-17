@@ -8,8 +8,19 @@ export default function App() {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [events, setEvents] = useState([]);
   const [dataChannel, setDataChannel] = useState(null);
+  const [contextSources, setContextSources] = useState([]);
   const peerConnection = useRef(null);
   const audioElement = useRef(null);
+
+  // Function to add a context source
+  function addContextSource(source) {
+    setContextSources((prev) => [...prev, source]);
+  }
+
+  // Function to remove a context source
+  function removeContextSource(index) {
+    setContextSources((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function startSession() {
     // Get a session token for OpenAI Realtime API
@@ -122,6 +133,33 @@ export default function App() {
     sendClientEvent({ type: "response.create" });
   }
 
+  // Send initial context to the model when the data channel opens
+  function sendInitialContext() {
+    if (contextSources.length > 0) {
+      // Create a system message with all context sources
+      const systemMessage = {
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: "system",
+          content: [
+            {
+              type: "input_text",
+              text:
+                "Please use the following context sources in your responses:\n\n" +
+                contextSources
+                  .map((source) => `--- ${source.title} ---\n${source.content}`)
+                  .join("\n\n"),
+            },
+          ],
+        },
+      };
+
+      sendClientEvent(systemMessage);
+      console.log("Sent initial context to the model");
+    }
+  }
+
   // Attach event listeners to the data channel when a new one is created
   useEffect(() => {
     if (dataChannel) {
@@ -139,9 +177,12 @@ export default function App() {
       dataChannel.addEventListener("open", () => {
         setIsSessionActive(true);
         setEvents([]);
+
+        // Send initial context when the data channel opens
+        sendInitialContext();
       });
     }
-  }, [dataChannel]);
+  }, [dataChannel, contextSources]);
 
   return (
     <>
@@ -173,6 +214,9 @@ export default function App() {
             sendTextMessage={sendTextMessage}
             events={events}
             isSessionActive={isSessionActive}
+            contextSources={contextSources}
+            addContextSource={addContextSource}
+            removeContextSource={removeContextSource}
           />
         </section>
       </main>

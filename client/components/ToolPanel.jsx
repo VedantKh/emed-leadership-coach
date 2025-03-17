@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ContextManager from "./ContextManager";
 
 const functionDescription = `
 Call this function when a user asks for a color palette.
@@ -67,6 +68,9 @@ export default function ToolPanel({
   isSessionActive,
   sendClientEvent,
   events,
+  contextSources,
+  addContextSource,
+  removeContextSource
 }) {
   const [functionAdded, setFunctionAdded] = useState(false);
   const [functionCallOutput, setFunctionCallOutput] = useState(null);
@@ -115,19 +119,27 @@ export default function ToolPanel({
   }, [isSessionActive]);
 
   return (
-    <section className="h-full w-full flex flex-col gap-4">
-      <div className="h-full bg-gray-50 rounded-md p-4">
-        <h2 className="text-lg font-bold">Color Palette Tool</h2>
-        {isSessionActive ? (
-          functionCallOutput ? (
-            <FunctionCallOutput functionCallOutput={functionCallOutput} />
+    <div>
+      <ContextManager 
+        contextSources={contextSources}
+        addContextSource={addContextSource}
+        removeContextSource={removeContextSource}
+        isSessionActive={isSessionActive}
+      />
+      <section className="h-full w-full flex flex-col gap-4">
+        <div className="h-full bg-gray-50 rounded-md p-4">
+          <h2 className="text-lg font-bold">Color Palette Tool</h2>
+          {isSessionActive ? (
+            functionCallOutput ? (
+              <FunctionCallOutput functionCallOutput={functionCallOutput} />
+            ) : (
+              <p>Ask for advice on a color palette...</p>
+            )
           ) : (
-            <p>Ask for advice on a color palette...</p>
-          )
-        ) : (
-          <p>Start the session to use this tool...</p>
-        )}
-      </div>
-    </section>
+            <p>Start the session to use this tool...</p>
+          )}
+        </div>
+      </section>
+    </div>
   );
 }
