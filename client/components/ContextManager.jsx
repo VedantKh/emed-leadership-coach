@@ -4,12 +4,14 @@ export default function ContextManager({
   contextSources, 
   addContextSource, 
   removeContextSource,
-  isSessionActive
+  isSessionActive,
+  isLoadingDefaultSources
 }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isAddingContext, setIsAddingContext] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [expandedPreview, setExpandedPreview] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -45,33 +47,58 @@ export default function ContextManager({
     }
   };
 
+  const toggleExpandedPreview = (index) => {
+    setExpandedPreview(expandedPreview === index ? null : index);
+  };
+
   return (
     <div className="mb-6 border border-gray-200 rounded-lg p-4">
       <h3 className="text-lg font-medium mb-4">Context Sources</h3>
       
-      {contextSources.length > 0 ? (
+      {isLoadingDefaultSources ? (
+        <div className="flex items-center justify-center p-4">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
+          <p>Loading context sources...</p>
+        </div>
+      ) : contextSources.length > 0 ? (
         <div className="mb-4">
           {contextSources.map((source, index) => (
-            <div key={index} className="flex justify-between items-center p-2 border-b">
-              <div className="truncate">
-                <strong>{source.title}</strong>
+            <div key={index} className="p-3 border-b hover:bg-gray-50">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-bold text-blue-600">{source.title}</div>
+                  {source.summary && (
+                    <p className="text-sm text-gray-600 mt-1">{source.summary}</p>
+                  )}
+                </div>
                 <button 
-                  className="ml-2 text-sm text-blue-500 hover:underline"
-                  onClick={() => {
-                    alert(source.content.substring(0, 500) + 
-                          (source.content.length > 500 ? "..." : ""));
-                  }}
+                  className="text-red-500 hover:text-red-700 ml-2"
+                  onClick={() => removeContextSource(index)}
+                  disabled={isSessionActive}
                 >
-                  preview
+                  ×
                 </button>
               </div>
-              <button 
-                className="text-red-500 hover:text-red-700"
-                onClick={() => removeContextSource(index)}
-                disabled={isSessionActive}
-              >
-                ×
-              </button>
+              
+              <div className="flex mt-2 space-x-2 text-sm">
+                {source.sourceUrl && (
+                  <a 
+                    href={source.sourceUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
+                    View Source
+                  </a>
+                )}
+              </div>
+              
+              {expandedPreview === index && (
+                <div className="mt-2 p-3 bg-gray-100 rounded text-sm overflow-auto max-h-48">
+                  {source.content.substring(0, 300)}
+                  {source.content.length > 300 && "..."}
+                </div>
+              )}
             </div>
           ))}
         </div>

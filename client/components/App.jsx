@@ -9,8 +9,84 @@ export default function App() {
   const [events, setEvents] = useState([]);
   const [dataChannel, setDataChannel] = useState(null);
   const [contextSources, setContextSources] = useState([]);
+  const [isLoadingDefaultSources, setIsLoadingDefaultSources] = useState(true);
   const peerConnection = useRef(null);
   const audioElement = useRef(null);
+
+  // Load default context sources on mount
+  useEffect(() => {
+    async function loadDefaultSources() {
+      setIsLoadingDefaultSources(true);
+      try {
+        // First fetch the list of sources
+        const sourcesListResponse = await fetch("/api/contextSources.json");
+        const sourcesList = await sourcesListResponse.json();
+
+        // Load each source in parallel with the correct path
+        const loadedSources = await Promise.all(
+          sourcesList.map(async (sourceInfo) => {
+            const sourceResponse = await fetch(
+              `/api/sources/${sourceInfo.filename}`,
+            );
+            const sourceData = await sourceResponse.json();
+            return sourceData;
+          }),
+        );
+
+        setContextSources(loadedSources);
+      } catch (error) {
+        console.error("Failed to load default context sources:", error);
+
+        // Fallback to demo sources if API fails
+        const demoSources = [
+          {
+            title: "Web Search API Documentation",
+            summary:
+              "Documentation for implementing the web search capability.",
+            sourceUrl: "/docs/web-search",
+            content:
+              "The Web Search API allows models to search the web in real-time...[full documentation content]",
+          },
+          {
+            title: "FireCrawl Case Study",
+            summary:
+              "How FireCrawl improved customer satisfaction using the API.",
+            sourceUrl: "/docs/firecrawl",
+            content:
+              "FireCrawl implemented the realtime API to create a more interactive experience...[full case study]",
+          },
+          {
+            title: "E-commerce Personalization",
+            summary:
+              "Case study on implementing personalized shopping experiences.",
+            sourceUrl: "#",
+            content:
+              "By implementing personalized recommendations using the realtime API, the e-commerce platform saw a 24% increase in conversion rates...[full content]",
+          },
+          {
+            title: "Healthcare Assistant Implementation",
+            summary:
+              "How a healthcare provider built an assistant for patient support.",
+            sourceUrl: "#",
+            content:
+              "The healthcare provider developed a voice-based realtime assistant that helps patients navigate their care options...[full content]",
+          },
+          {
+            title: "Educational Tool Development",
+            summary: "Case study on building an interactive learning platform.",
+            sourceUrl: "#",
+            content:
+              "The educational platform integrated the realtime API to create an interactive tutor that provides immediate feedback to students...[full content]",
+          },
+        ];
+        setContextSources(demoSources);
+      } finally {
+        setIsLoadingDefaultSources(false);
+      }
+    }
+
+    loadDefaultSources();
+  }, []);
 
   // Function to add a context source
   function addContextSource(source) {
@@ -189,14 +265,14 @@ export default function App() {
       <nav className="absolute top-0 left-0 right-0 h-16 flex items-center">
         <div className="flex items-center gap-4 w-full m-4 pb-2 border-0 border-b border-solid border-gray-200">
           <img style={{ width: "24px" }} src={logo} />
-          <h1>realtime console</h1>
+          <h1>Talk to your sources</h1>
         </div>
       </nav>
       <main className="absolute top-16 left-0 right-0 bottom-0">
         <section className="absolute top-0 left-0 right-[380px] bottom-0 flex">
-          <section className="absolute top-0 left-0 right-0 bottom-32 px-4 overflow-y-auto">
+          {/* <section className="absolute top-0 left-0 right-0 bottom-32 px-4 overflow-y-auto">
             <EventLog events={events} />
-          </section>
+          </section> */}
           <section className="absolute h-32 left-0 right-0 bottom-0 p-4">
             <SessionControls
               startSession={startSession}
@@ -217,6 +293,7 @@ export default function App() {
             contextSources={contextSources}
             addContextSource={addContextSource}
             removeContextSource={removeContextSource}
+            isLoadingDefaultSources={isLoadingDefaultSources}
           />
         </section>
       </main>

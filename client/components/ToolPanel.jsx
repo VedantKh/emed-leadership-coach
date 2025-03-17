@@ -70,7 +70,8 @@ export default function ToolPanel({
   events,
   contextSources,
   addContextSource,
-  removeContextSource
+  removeContextSource,
+  isLoadingDefaultSources,
 }) {
   const [functionAdded, setFunctionAdded] = useState(false);
   const [functionCallOutput, setFunctionCallOutput] = useState(null);
@@ -120,26 +121,13 @@ export default function ToolPanel({
 
   return (
     <div>
-      <ContextManager 
+      <ContextManager
         contextSources={contextSources}
         addContextSource={addContextSource}
         removeContextSource={removeContextSource}
         isSessionActive={isSessionActive}
+        isLoadingDefaultSources={isLoadingDefaultSources}
       />
-      <section className="h-full w-full flex flex-col gap-4">
-        <div className="h-full bg-gray-50 rounded-md p-4">
-          <h2 className="text-lg font-bold">Color Palette Tool</h2>
-          {isSessionActive ? (
-            functionCallOutput ? (
-              <FunctionCallOutput functionCallOutput={functionCallOutput} />
-            ) : (
-              <p>Ask for advice on a color palette...</p>
-            )
-          ) : (
-            <p>Start the session to use this tool...</p>
-          )}
-        </div>
-      </section>
     </div>
   );
 }

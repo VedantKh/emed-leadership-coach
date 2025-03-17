@@ -1,0 +1,5 @@
+[
+  { "filename": "telehealth.json", "name": "Telehealth Expansion Case Study" },
+  { "filename": "dermatology-triage.json", "name": "AI Dermatology Triage" },
+  { "filename": "nyc-award.json", "name": "NYC Innovation Award" }
+] 
